@@ -1,7 +1,7 @@
 class Ombre
   def self.vertical text, colors
     text.lines.each_with_index.map do |line, i|
-      red, green, blue = get_offset_color colors, i/text.lines.count.to_f
+      red, green, blue = get_offset_color(colors, i.to_f / (text.lines.count.to_f))
       color_text red, green, blue, line
     end.join
   end
@@ -9,35 +9,37 @@ class Ombre
   def self.horizontal text, colors
     text.lines.map do |line|
       line.chars.each_with_index.map do |char, i|
-        red, green, blue = get_offset_color colors, i/text.lines.max.length.to_f
+        red, green, blue = get_offset_color(colors, (i.to_f) / (text.lines.max.length.to_f))
         color_text red, green, blue, char
       end.join
     end.join
   end
 
-  def self.diagonal text, colors
+  def self.diagonal(text, colors)
+    by_block(text, colors) do |max_x, max_y, x, y|
+      (y + x) / (max_y + max_x).to_f
+    end
+  end
+
+  def self.diagonal_up(text, colors)
+    by_block(text, colors) do |max_x, max_y, x, y|
+      (max_y - y + x) / (max_y + max_x).to_f
+    end
+  end
+
+  def self.by_block(text, colors, &block)
     max_y = text.lines.count
     max_x = text.lines.max.length
     text.lines.each_with_index.map do |line, y|
       line.chars.each_with_index.map do |char, x|
-        ratio = (y + x)/(max_y + max_x).to_f
+        ratio = block.call(max_x, max_y, x.to_f, y.to_f)
+        ratio = [0.0, ratio].max
+        ratio = [1.0, ratio].min
         red, green, blue = get_offset_color colors, ratio
         color_text red, green, blue, char
       end.join
     end.join
   end
-
-  def self.diagonal_up text, colors
-    max_y = text.lines.count
-    max_x = text.lines.max.length
-    text.lines.each_with_index.map do |line, y|
-      line.chars.each_with_index.map do |char, x|
-        ratio = (max_y - y + x)/(max_y + max_x).to_f
-        red, green, blue = get_offset_color colors, ratio
-        color_text red, green, blue, char
-      end.join
-    end.join
-  end 
 
   private
 
